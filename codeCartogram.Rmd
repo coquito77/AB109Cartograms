@@ -12,8 +12,7 @@ output:
 
 "A cartogram is a map in which some thematic mapping variable such as travel time, population, or Gross National Product is substituted for land area or distance. The geometry or space of the map is distorted in order to convey the information of this alternate variable. There are two main types of cartograms: area and distance cartograms. Cartograms have a fairly long history, with examples from the mid-1800s." from   <https://en.wikipedia.org/wiki/Cartogram>.
 
-For this project, data from the Chief Probation Officers of California (CPOC) website was used. These data contains counts of supervised AB109 population from all 58 counties in California. The AB109 population is composed of Post Release Community Supervision (PRCS) and Offenders with specified felony crimes that are now punishable by local jails. The latter group is also known as 1170h. The cartograms below were developed to visualize AB109 population for each California County. The CPOC data can be accessed here
- [here](http://www.cpoc.org/assets/Realignment/dashboard_county.swf)
+For this project, data from the Chief Probation Officers of California (CPOC) website was used. These data contains counts of supervised AB109 population from all 58 counties in California. The AB109 population is composed of Post Release Community Supervision (PRCS) and Offenders with specified felony crimes that are now punishable by local jails. The latter group is also known as 1170h. The cartograms below were developed to visualize AB109 population for each California County. The CPOC data can be accessed here [here](http://www.cpoc.org/assets/Realignment/dashboard_county.swf)
 
 ```{r options, cache = FALSE, echo=FALSE, include=FALSE}
 
@@ -165,7 +164,7 @@ ggplot(califCounties, aes(long, lat, group=group)) +
 
 ```
 
-```{r map of counties pop, fig.width= 7, fig.height = 9, fig.cap= "Cartogram of California counties population", message = FALSE, warning = FALSE, include=TRUE} 
+```{r map of counties pop, fig.width= 7, fig.height = 9, fig.cap= "Cartogram of California counties' population 2015 estimate", message = FALSE, warning = FALSE, include=TRUE} 
 
 ggplot(cartogramPopulation, aes(long, lat, group=group)) +
   geom_polygon(aes(), fill="grey40", colour="grey90", alpha=.7, size = .05) +
