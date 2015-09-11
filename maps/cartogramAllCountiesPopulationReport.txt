@@ -1,0 +1,33 @@
+CARTOGRAM COMPUTATION REPORT
+
+CARTOGRAM PARAMETERS:
+Cartogram layer: countiesNoIslandsWithCountst
+Cartogram attribute: Est2015
+Attribute type: Population value
+Transformation quality: 96 of 100
+Cartogram grid size: 1060 x 977
+Diffusion grid size: 512
+Diffusion iterations: 4
+
+CARTOGRAM LAYER & ATTRIBUTE STATISTICS:
+Number of features: 58
+Attribute mean value: 670637.3965517242
+Attribute minimum value: 1252.0
+Attribute maximum value: 1.014707E7
+
+SIMULTANEOUSLY TRANSFORMED LAYERS:
+None
+
+CONSTRAINED DEFORMATION LAYERS:
+None
+
+CARTOGRAM ERROR
+The cartogram error is a measure for the quality of the result.
+Mean cartogram error: 90.95075597699774
+Standard deviation: 18.30362495181655
+25th percentile: 91.4868898659329
+50th percentile: 97.53768150590518
+75th percentile: 100.67409225322288
+Features with mean error +/- 1 standard deviation: 51 of 58 (88%)
+
+Computation time: 781 seconds

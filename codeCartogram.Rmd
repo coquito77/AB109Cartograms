@@ -1,0 +1,188 @@
+---
+title: "Cartograms of AB109 Population by County"
+author: "Moises Evangelista"
+date: "August 31, 2015"
+output:
+  pdf_document:
+    fig_width: 7
+    fig_height: 6
+    fig_caption: true
+    fig_crop: false
+---
+
+"A cartogram is a map in which some thematic mapping variable such as travel time, population, or Gross National Product is substituted for land area or distance. The geometry or space of the map is distorted in order to convey the information of this alternate variable. There are two main types of cartograms: area and distance cartograms. Cartograms have a fairly long history, with examples from the mid-1800s." from   <https://en.wikipedia.org/wiki/Cartogram>.
+
+For this project, data from the Chief Probation Officers of California (CPOC) website was used. These data contains counts of supervised AB109 population from all 58 counties in California. The AB109 population is composed of Post Release Community Supervision (PRCS) and Offenders with specified felony crimes that are now punishable by local jails. The latter group is also known as 1170h. The cartograms below were developed to visualize AB109 population for each California County. The CPOC data can be accessed here
+ [here](http://www.cpoc.org/assets/Realignment/dashboard_county.swf)
+
+```{r options, cache = FALSE, echo=FALSE, include=FALSE}
+
+rm(list=ls(all=TRUE)) #start with empty workspace
+
+startTime <- Sys.time()
+
+# set global chunk options
+knitr::opts_chunk$set(cache=TRUE, echo=FALSE, include=FALSE)
+
+setwd("~/AB109Cartograms/") # set the working directory
+list.files() # see whats there
+```
+
+
+```{r, echo=FALSE, cache=TRUE}
+library(RODBC)
+
+channel <- odbcConnectExcel2007("./probationrealignmentdatacpoc.xlsx")
+sqlTables(channel)
+allContiesData <- sqlFetch(channel, "countydata")
+odbcClose(channel)
+str(allContiesData); summary(allContiesData)
+
+# remove rows of labels
+
+labelDesc <- allContiesData[1:19, ]
+str(labelDesc)
+
+allCountiesData <- allContiesData[-c(1:19), ]
+str(allCountiesData)
+head(allCountiesData)
+
+# rename this set
+
+names(allCountiesData) <-  c("County","Month","Year","Region",
+                             "A1","A2","A3","A4","A5","A7","A8","A9",
+                             "B1","B2","B3","B4",
+                             "C1")
+
+str(allCountiesData)
+summary(allCountiesData)
+# add more desc to the variable names
+
+head(labelDesc,20)[,1:2]
+
+names(allCountiesData) <-  c("County","Month","Year","Region",
+                             "A1PRCS offenders released","A2PRCS warrant-before (count)",
+                             "A3PRCS closures (6 - 12 months; count)",
+                             "A4PRCS closures (1 year; count)",
+                             "A5PRCS closures (18 months; count)",
+                             "A7Active PRCS offenders (population snapshot)",
+                             "A8Active PRCS warrant-after (population snapshot)",
+                             "A9PRCS Completions",
+                             "B11170h (a) jail only sentences (count)",
+                             "B2 1170h (b) split sentences (count)",
+                             "B3Active Mandatory Supervision (population snapshot)",
+                             "B4Mandatory Supervision Completions(Count)",
+                             "C1New felony probation grants (count)")
+
+# remove non numeric or character values from names
+
+
+names(allCountiesData) <- str <- gsub("[^[:alnum:]]", "", names(allCountiesData))
+
+# subset most recent counts
+library(dplyr)
+
+lastCounts <- allCountiesData %>%
+  filter(Month == "September", Year == "2014")
+
+# some counties do not have current data
+# so filter then separately
+
+
+OtherCounties1 <- allCountiesData %>%
+  filter(grepl("Contra Costa|Glenn|Ventura", County),
+Month == "December", Year == "2013")
+
+OtherCounties2 <- allCountiesData %>%
+  filter(grepl("Alameda|Marin", County),
+Month == "March", Year == "2014")
+
+# combine all the sets
+
+comboLastCountyCounts <- rbind(lastCounts, OtherCounties1, OtherCounties2)
+
+# export the data
+
+write.table(comboLastCountyCounts, file = "./comboLastCountyCounts.txt",  sep="\t", row.names = FALSE)
+
+
+# using arcgis or qgis merge the counts with 
+# california's counties, then use 
+
+# column for PSP counts is comboLas8 
+# column for split count is comboLas13
+```
+
+```{r}
+
+# after the psps and split county cartograms are 
+# plot a map
+
+library(maptools)
+
+califCounties <- readShapePoly("maps/countiesNoIslandsWithCounts")
+
+cartogramSplists <- readShapePoly("maps/cartogramCountiesNoIslandsSplits")
+
+cartogramPSPs <- readShapePoly("maps/cartogramCountiesNoIslandsPsps")
+
+cartogramPopulation <- readShapePoly("maps/countiesNoIslandsWithPopulationCount")
+
+# see this
+# https://github.com/hadley/ggplot2/wiki/plotting-polygon-shapefiles
+
+```
+
+```{r cartogram of splits, fig.width= 7, fig.height = 9, fig.cap= "Cartogram of 1170h population by county", message = FALSE, warning = FALSE, include=TRUE} 
+
+library(ggplot2)
+
+ggplot(cartogramSplists, aes(long, lat, group=group)) +
+  geom_polygon(aes(), fill="grey40", colour="grey90", alpha=.7, size = .05) +
+  coord_map() +
+  theme_minimal() # +
+  # ggtitle("Cartogram of 1170h population by county")
+
+```
+
+```{r cartogram of Psps, fig.width= 7, fig.height = 9, fig.cap= "Cartogram of PRCS population by county", message = FALSE, warning = FALSE, include=TRUE} 
+
+ggplot(cartogramPSPs, aes(long, lat, group=group)) +
+  geom_polygon(aes(), fill="grey40", colour="grey90", alpha=.7, size = .05) +
+  coord_map() +
+  theme_minimal() # +
+  # ggtitle("Cartogram of PRCS population by county") 
+```
+
+
+```{r map of counties, fig.width= 7, fig.height = 9, fig.cap= "Map of California counties", message = FALSE, warning = FALSE, include=TRUE} 
+
+ggplot(califCounties, aes(long, lat, group=group)) +
+  geom_polygon(aes(), fill="grey40", colour="grey90", alpha=.7, size = .05) +
+  coord_map() +
+  theme_minimal() # +
+  # ggtitle("California Counties") 
+
+```
+
+```{r map of counties pop, fig.width= 7, fig.height = 9, fig.cap= "Cartogram of California counties population", message = FALSE, warning = FALSE, include=TRUE} 
+
+ggplot(cartogramPopulation, aes(long, lat, group=group)) +
+  geom_polygon(aes(), fill="grey40", colour="grey90", alpha=.7, size = .05) +
+  coord_map() +
+  theme_minimal() # +
+  # ggtitle("California Counties") 
+
+```
+
+```{r cache=FALSE}
+
+#get the time
+endTime <- Sys.time()
+```
+
+\clearpage
+
+
+The analysis was completed on `r format(Sys.time(), "%a %b %d %X %Y")
+` in `r round(difftime(endTime, startTime , units = c( "secs")),0)` seconds. 
