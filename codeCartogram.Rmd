@@ -5,14 +5,20 @@ date: "August 31, 2015"
 output:
   pdf_document:
     fig_width: 7
-    fig_height: 6
+    fig_height: 9
     fig_caption: true
     fig_crop: false
+fontsize: 11pt
+header-includes:
+- \usepackage{hyperref, fancyhdr}
+- \hypersetup{colorlinks,urlcolor=blue}
+- \pagestyle{fancy}
+- \fancyhead[CO,CE]{\fontsize{10}{12} \selectfont Cartograms of AB109 Population by County}
 ---
 
 "A cartogram is a map in which some thematic mapping variable such as travel time, population, or Gross National Product is substituted for land area or distance. The geometry or space of the map is distorted in order to convey the information of this alternate variable. There are two main types of cartograms: area and distance cartograms. Cartograms have a fairly long history, with examples from the mid-1800s." from   <https://en.wikipedia.org/wiki/Cartogram>.
 
-For this project, data from the Chief Probation Officers of California (CPOC) website was used. These data contains counts of supervised AB109 population from all 58 counties in California. The AB109 population is composed of Post Release Community Supervision (PRCS) and Offenders with specified felony crimes that are now punishable by local jails. The latter group is also known as 1170h. The cartograms below were developed to visualize AB109 population for each California County. The CPOC data can be accessed here [here](http://www.cpoc.org/assets/Realignment/dashboard_county.swf)
+For this project, data from the Chief Probation Officers of California (CPOC) website was used. These data contains counts of supervised AB109 population from all 58 counties in California. The AB109 population is composed of Post Release Community Supervision (PRCS) and Offenders with specified felony crimes that are now punishable by local jails. The latter group is also known as 1170h. The cartograms below were developed to visualize AB109 population for each California County. The CPOC data can be accessed [here](http://www.cpoc.org/assets/Realignment/dashboard_county.swf).
 
 ```{r options, cache = FALSE, echo=FALSE, include=FALSE}
 
@@ -23,12 +29,13 @@ startTime <- Sys.time()
 # set global chunk options
 knitr::opts_chunk$set(cache=TRUE, echo=FALSE, include=FALSE)
 
-setwd("~/AB109Cartograms/") # set the working directory
+setwd("~/GitHub/AB109Cartograms/") # set the working directory
 list.files() # see whats there
 ```
 
 
 ```{r, echo=FALSE, cache=TRUE}
+
 library(RODBC)
 
 channel <- odbcConnectExcel2007("./probationrealignmentdatacpoc.xlsx")
@@ -75,8 +82,7 @@ names(allCountiesData) <-  c("County","Month","Year","Region",
 
 # remove non numeric or character values from names
 
-
-names(allCountiesData) <- str <- gsub("[^[:alnum:]]", "", names(allCountiesData))
+names(allCountiesData) <- gsub("[^[:alnum:]]", "", names(allCountiesData))
 
 # subset most recent counts
 library(dplyr)
@@ -102,8 +108,7 @@ comboLastCountyCounts <- rbind(lastCounts, OtherCounties1, OtherCounties2)
 
 # export the data
 
-write.table(comboLastCountyCounts, file = "./comboLastCountyCounts.txt",  sep="\t", row.names = FALSE)
-
+write.table(comboLastCountyCounts, file = "./comboLastCountyCounts.txt",  sep = "\t", row.names = FALSE)
 
 # using arcgis or qgis merge the counts with 
 # california's counties, then use 
@@ -132,46 +137,69 @@ cartogramPopulation <- readShapePoly("maps/countiesNoIslandsWithPopulationCount"
 
 ```
 
-```{r cartogram of splits, fig.width= 7, fig.height = 9, fig.cap= "Cartogram of 1170h population by county", message = FALSE, warning = FALSE, include=TRUE} 
+```{r cartogramsCombo, fig.width= 7, fig.height = 9, fig.cap= "Los Angeles County has a lower population of 1170(h) population relative to other counties.", message = FALSE, warning = FALSE, include=TRUE} 
 
 library(ggplot2)
+library(cowplot)
 
-ggplot(cartogramSplists, aes(long, lat, group=group)) +
-  geom_polygon(aes(), fill="grey40", colour="grey90", alpha=.7, size = .05) +
+MapOfCalifCounties <- ggplot(califCounties, aes(long, lat, group = group)) +
+  geom_polygon(aes(), fill = "grey40", colour = "grey90", alpha = .7, size = .05) +
   coord_map() +
-  theme_minimal() # +
-  # ggtitle("Cartogram of 1170h population by county")
+  theme_minimal() 
+
+CartogramCa1170HPopByCounty <- ggplot(cartogramSplists, aes(long, lat, group = group)) +
+  geom_polygon(aes(), fill = "grey40", colour = "grey90", alpha = .7, size = .05) +
+  coord_map() +
+  theme_minimal()
+
+CartogramCAlifPopulationByCounty <- ggplot(cartogramPopulation, aes(long, lat, group = group)) +
+  geom_polygon(aes(), fill = "grey40", colour = "grey90", alpha = .7, size = .05) +
+  coord_map() +
+  theme_minimal()
+
+CartogramCaPRCSPopByCounty <- ggplot(cartogramPSPs, aes(long, lat, group = group)) +
+  geom_polygon(aes(), fill = "grey40", colour = "grey90", alpha = .7, size = .05) +
+  coord_map() +
+  theme_minimal() 
+
+
+plot_grid(MapOfCalifCounties,
+          CartogramCa1170HPopByCounty,
+          CartogramCAlifPopulationByCounty,
+          CartogramCaPRCSPopByCounty,
+          labels = c("County border",
+                     "1170(h) Population",
+                     "Resident population",
+                     "PRCS population"),
+          label_size = 10,
+          ncol = 2,
+          rel_widths = .5,
+          rel_heights = 1)
+
+```
+
+```{r cartogram of splits, fig.width= 7, fig.height = 9, fig.cap= "Cartogram of 1170h population by county", message = FALSE, warning = FALSE, include=TRUE} 
+
+CartogramCa1170HPopByCounty
 
 ```
 
 ```{r cartogram of Psps, fig.width= 7, fig.height = 9, fig.cap= "Cartogram of PRCS population by county", message = FALSE, warning = FALSE, include=TRUE} 
 
-ggplot(cartogramPSPs, aes(long, lat, group=group)) +
-  geom_polygon(aes(), fill="grey40", colour="grey90", alpha=.7, size = .05) +
-  coord_map() +
-  theme_minimal() # +
-  # ggtitle("Cartogram of PRCS population by county") 
+CartogramCaPRCSPopByCounty
 ```
 
 
 ```{r map of counties, fig.width= 7, fig.height = 9, fig.cap= "Map of California counties", message = FALSE, warning = FALSE, include=TRUE} 
 
-ggplot(califCounties, aes(long, lat, group=group)) +
-  geom_polygon(aes(), fill="grey40", colour="grey90", alpha=.7, size = .05) +
-  coord_map() +
-  theme_minimal() # +
-  # ggtitle("California Counties") 
+MapOfCalifCounties
 
 ```
 
 ```{r map of counties pop, fig.width= 7, fig.height = 9, fig.cap= "Cartogram of California counties' population 2015 estimate", message = FALSE, warning = FALSE, include=TRUE} 
 
-ggplot(cartogramPopulation, aes(long, lat, group=group)) +
-  geom_polygon(aes(), fill="grey40", colour="grey90", alpha=.7, size = .05) +
-  coord_map() +
-  theme_minimal() # +
-  # ggtitle("California Counties") 
 
+CartogramCAlifPopulationByCounty
 ```
 
 ```{r cache=FALSE}
