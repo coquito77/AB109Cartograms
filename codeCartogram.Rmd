@@ -91,7 +91,7 @@ lastCounts <- allCountiesData %>%
   filter(Month == "September", Year == "2014")
 
 # some counties do not have current data
-# so filter then separately
+# so filter them separately
 
 
 OtherCounties1 <- allCountiesData %>%
@@ -112,9 +112,10 @@ write.table(comboLastCountyCounts, file = "./comboLastCountyCounts.txt",  sep = 
 
 # using arcgis or qgis merge the counts with 
 # california's counties, then use 
-
 # column for PSP counts is comboLas8 
 # column for split count is comboLas13
+# then use scapetoad to create cartograms 
+# http://scapetoad.choros.ch/
 ```
 
 ```{r}
